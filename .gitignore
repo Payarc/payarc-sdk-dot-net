@@ -1,0 +1,73 @@
+# Ignore Rider-specific files
+.idea/
+*.iml
+*.iws
+
+# Ignore build outputs and compiled files
+bin/
+obj/
+out/
+
+# Ignore user-specific configuration files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# Ignore NuGet packages and restore results
+*.nupkg
+packages/
+.nuget/
+
+# Ignore temporary and cache files
+*.tmp
+*.log
+*.vs/
+.vscode/
+**/*~*
+
+# Ignore ReSharper settings
+_ReSharper*
+*.DotSettings.user
+resharper.xml
+
+# Ignore application logs
+logs/
+*.log
+log/
+
+# Ignore publish output
+publish/
+wwwroot/
+
+# Ignore test results
+TestResults/
+*.trx
+*.coverage
+.coverage*
+
+# Ignore node_modules for JS/TS projects
+node_modules/
+npm-debug.log*
+
+# Ignore Python virtual environment
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+env/
+venv/
+
+# Ignore additional IDE-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore JetBrains workspace storage
+.idea/workspace.xml
+.idea/libraries/
+.idea/shelf/
+
+# Ignore temporary files from OS or editor
+*.swp
+*.bak
+*.tmp

@@ -147,87 +147,29 @@ public class Payarc
                 }
             }
         }
-
-
-
-
-
-
-
-
-        // public async Task<BaseResponse?> HandleChargeAsync(HttpMethod method, string path, ChargeRequestPayload chargeData)
-        // {
-        //     try
-        //     {
-        //         var request = new HttpRequestMessage(method, path)
-        //         {
-        //             Content = new StringContent(chargeData.ToJson(), Encoding.UTF8, "application/json")
-        //         };
-        //         Console.WriteLine(chargeData.ToJson());
-        //         foreach (var header in _headers)
-        //         {
-        //             request.Headers.Add(header.Key, header.Value);
-        //         }
-        //
-        //         var response = await _httpClient.SendAsync(request);
-        //         Console.WriteLine($"Response status code: {response.StatusCode}");
-        //         response.EnsureSuccessStatusCode();
-        //         var responseBody = await response.Content.ReadAsStringAsync();
-        //         var data = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
-        //         Console.WriteLine("Successfully processed charge");
-        //         // Console.WriteLine($"Charge data: {JsonSerializer.Serialize(data)}");
-        //         if (data != null && data.ContainsKey("data") && data["data"] is JsonElement dataElement)
-        //         {
-        //             var dataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(dataElement.GetRawText());
-        //             // Console.WriteLine(dataDict?.ToString());
-        //             if (dataDict != null) return AddObjectId(dataDict, dataElement.GetRawText());
-        //         }
-        //
-        //         throw new InvalidOperationException("Response data is invalid or missing.");
-        //     }
-        //     catch (HttpRequestException ex)
-        //     {
-        //         Console.WriteLine($"Error processing charge: {ex.Message}");
-        //         throw;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine($"Error handling charge: {ex.Message}");
-        //         throw;
-        //     }
-        // }
-
+        
     public async Task<BaseResponse?> HandleChargeAsync(HttpMethod method, string path, ChargeRequestPayload chargeData)
 {
     try
     {
-        // Create the HTTP request
         var request = new HttpRequestMessage(method, path)
         {
             Content = new StringContent(chargeData.ToJson(), Encoding.UTF8, "application/json")
         };
         Console.WriteLine(chargeData.ToJson());
-
-        // Add headers to the request
         foreach (var header in _headers)
         {
             request.Headers.Add(header.Key, header.Value);
         }
-
-        // Send the HTTP request
         var response = await _httpClient.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
-
-        // Log status and body for debugging
         Console.WriteLine($"Response status code: {response.StatusCode}");
         // Console.WriteLine($"Response body: {responseBody}");
 
-        // Attempt to process JSON even for non-success status codes
         if (!response.IsSuccessStatusCode)
         {
             try
             {
-                // Deserialize error JSON
                 var errorData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
                 Console.WriteLine($"Error details: {JsonSerializer.Serialize(errorData)}");
                 throw new InvalidOperationException($"HTTP error {response.StatusCode}: {responseBody}");
@@ -238,24 +180,19 @@ public class Payarc
                 throw new InvalidOperationException($"HTTP error {response.StatusCode}: Unable to parse error response.");
             }
         }
-
         if (string.IsNullOrWhiteSpace(responseBody))
         {
             throw new InvalidOperationException("Response body is empty.");
         }
-
-        // Deserialize the main response into a dictionary
         var data = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
         if (data != null && data.TryGetValue("data", out var dataValue) && dataValue is JsonElement dataElement)
         {
-            // Deserialize the nested "data" field
             var dataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(dataElement.GetRawText());
             if (dataDict != null)
             {
                 return AddObjectId(dataDict, dataElement.GetRawText());
             }
         }
-
         throw new InvalidOperationException("Response data is invalid or missing.");
     }
     catch (HttpRequestException ex)
@@ -314,9 +251,107 @@ public class Payarc
 
 
 
-        public void Retrieve()
+        public async Task<BaseResponse?> Retrieve(string chargeId)
         {
-            Console.WriteLine("Charge retrieved.");
+            try
+            {
+                var (endpoint, id) = DetermineEndpointAndId(chargeId);
+                return await GetChargeDataAsync(HttpMethod.Get, endpoint, id);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<BaseResponse?> GetChargeDataAsync(HttpMethod method, string endpoint, string chargeId)
+        {
+            try
+            {
+                var path = $"{endpoint}/{chargeId}";
+                var parameters = GetParams(endpoint);
+                var request = new HttpRequestMessage(HttpMethod.Get, path)
+                {
+                    Content = new StringContent(JsonSerializer.Serialize(parameters), Encoding.UTF8, "application/json")
+                };
+                foreach (var header in _headers)
+                {
+                    request.Headers.Add(header.Key, header.Value);
+                }
+                var response = await _httpClient.SendAsync(request);
+                var responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response status code: {response.StatusCode}");
+                // Console.WriteLine($"Response body: {responseBody}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
+                    Console.WriteLine($"Error details: {JsonSerializer.Serialize(errorData)}");
+                    throw new InvalidOperationException($"HTTP error {response.StatusCode}: {responseBody}");
+                }
+                if (string.IsNullOrWhiteSpace(responseBody))
+                {
+                    throw new InvalidOperationException("Response body is empty.");
+                }
+                var data = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
+                if (data != null && data.TryGetValue("data", out var dataValue) && dataValue is JsonElement dataElement)
+                {
+                    var dataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(dataElement.GetRawText());
+                    if (dataDict != null)
+                    {
+                        return AddObjectId(dataDict, dataElement.GetRawText());
+                    }
+                }
+                throw new InvalidOperationException("Response data is invalid or missing.");
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HTTP error processing charge: {ex.Message}");
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"JSON error processing charge: {ex.Message}");
+                throw new InvalidOperationException("Failed to process JSON response.", ex);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General error handling charge: {ex.Message}");
+                throw;
+            }
+        }
+
+        private Dictionary<string, string> GetParams(string endpoint)
+        {
+            if (endpoint == "charges")
+            {
+                return new Dictionary<string, string>
+                {
+                    { "include", "transaction_metadata,extra_metadata" }
+                };
+            }
+
+            if (endpoint == "achcharges")
+            {
+                return new Dictionary<string, string>
+                {
+                    { "include", "review" }
+                };
+            }
+            return new Dictionary<string, string>();
+        }
+        
+        private (string endpoint, string id) DetermineEndpointAndId(string chargeId)
+        {
+            if (chargeId.StartsWith("ch_"))
+            {
+                return ("charges", chargeId.Substring(3));
+            }
+            if (chargeId.StartsWith("ach_"))
+            {
+                return ("achcharges", chargeId.Substring(4));
+            }
+            throw new Exception("Invalid charge ID format.");
         }
 
         public void List()

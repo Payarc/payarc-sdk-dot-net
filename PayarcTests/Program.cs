@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace TestPayarcSDK;
+﻿namespace TestPayarcSDK;
 using Payarc;
 
 public static class Program
@@ -18,7 +15,9 @@ public static class Program
         
         // await CreateChargeExample(); 
         await CreateChargeByCardIdExample();
+        // await GetChargeById();
     }
+    
 
     private static async Task CreateChargeExample()
     {
@@ -58,6 +57,16 @@ public static class Program
         Console.WriteLine(charge);
         Console.WriteLine("Raw Data");
         Console.WriteLine(charge?.RawData);
+    }
+
+    private static async Task GetChargeById()
+    {
+        var charge = await Payarc.Charges.Retrieve("ch_MnBROWLXBBXnoOWL");
+        Console.WriteLine("Charge Data");
+        Console.WriteLine(charge);
+        Console.WriteLine("Raw Data");
+        Console.WriteLine(charge?.RawData);
+        
     }
     
     

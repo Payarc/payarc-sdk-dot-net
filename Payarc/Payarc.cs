@@ -8,6 +8,7 @@ using Payarc.charges;
 using Payarc.Entities.Charges;
 
 namespace Payarc;
+
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -33,6 +34,7 @@ public class Payarc
         {
             throw new ArgumentNullException(nameof(PayarcConfiguration.ApiKey), "Api Key is required");
         }
+
         this.version = version;
         baseURL = PayarcConfiguration.BaseUrl ?? "sandbox";
         baseURL = baseURL == "prod"
@@ -49,7 +51,7 @@ public class Payarc
         {
             // { "Content-Type", "application/json" },
             { "Accept", "application/json" },
-            { "Authorization", $"Bearer { this.bearerToken}" }
+            { "Authorization", $"Bearer {this.bearerToken}" }
         };
 
         // Initialize Charges operations
@@ -74,14 +76,13 @@ public class Payarc
                 var chargePayload = new ChargeRequestPayload();
                 chargePayload.Amount = chargeData.Amount;
                 chargePayload.Currency = chargeData.Currency;
-                if (chargeData.Source!=null)
+                if (chargeData.Source != null)
                 {
                     var source = chargeData.Source;
                     if (source.Value.IsSecond)
                     {
-                       var second = chargeData.Source.Value.Second;
-                       JsonConvert.PopulateObject(JsonConvert.SerializeObject(second), chargePayload);
-
+                        var second = chargeData.Source.Value.Second;
+                        JsonConvert.PopulateObject(JsonConvert.SerializeObject(second), chargePayload);
                     }
                 }
 
@@ -117,7 +118,7 @@ public class Payarc
                             break;
                     }
                 }
-               
+
                 var idPrefixes = new Dictionary<string, int>
                 {
                     { "TokenId", 3 },
@@ -125,13 +126,15 @@ public class Payarc
                     { "CardId", 4 }
                 };
                 NormalizeIDs(chargePayload, idPrefixes);
-                return await HandleChargeAsync(HttpMethod.Post,"charges", chargePayload);
+                return await HandleChargeAsync(HttpMethod.Post, "charges", chargePayload);
             }
             catch (Exception ex)
             {
-                throw new Exception("Error processing charge", ex);
+                Console.WriteLine(ex);
+                throw;
             }
         }
+
         public void NormalizeIDs(ChargeRequestPayload payload, Dictionary<string, int> idPrefixes)
         {
             foreach (var (key, prefixLength) in idPrefixes)
@@ -140,115 +143,106 @@ public class Payarc
                 if (property != null && property.PropertyType == typeof(string))
                 {
                     var value = property.GetValue(payload) as string;
-                    if (!string.IsNullOrEmpty(value) && value.StartsWith(key.ToLower().Substring(0, prefixLength) + "_"))
+                    if (!string.IsNullOrEmpty(value) &&
+                        value.StartsWith(key.ToLower().Substring(0, prefixLength) + "_"))
                     {
                         property.SetValue(payload, value.Substring(prefixLength + 1));
                     }
                 }
             }
         }
-        
-    public async Task<BaseResponse?> HandleChargeAsync(HttpMethod method, string path, ChargeRequestPayload chargeData)
-{
-    try
-    {
-        var request = new HttpRequestMessage(method, path)
-        {
-            Content = new StringContent(chargeData.ToJson(), Encoding.UTF8, "application/json")
-        };
-        Console.WriteLine(chargeData.ToJson());
-        foreach (var header in _headers)
-        {
-            request.Headers.Add(header.Key, header.Value);
-        }
-        var response = await _httpClient.SendAsync(request);
-        var responseBody = await response.Content.ReadAsStringAsync();
-        Console.WriteLine($"Response status code: {response.StatusCode}");
-        // Console.WriteLine($"Response body: {responseBody}");
 
-        if (!response.IsSuccessStatusCode)
+        public async Task<BaseResponse?> HandleChargeAsync(HttpMethod method, string path,
+            ChargeRequestPayload chargeData)
         {
             try
             {
-                var errorData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
-                Console.WriteLine($"Error details: {JsonSerializer.Serialize(errorData)}");
-                throw new InvalidOperationException($"HTTP error {response.StatusCode}: {responseBody}");
+                var request = new HttpRequestMessage(method, path)
+                {
+                    Content = new StringContent(chargeData.ToJson(), Encoding.UTF8, "application/json")
+                };
+                Console.WriteLine(chargeData.ToJson());
+                foreach (var header in _headers)
+                {
+                    request.Headers.Add(header.Key, header.Value);
+                }
+
+                var response = await _httpClient.SendAsync(request);
+                var responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response status code: {response.StatusCode}");
+                // Console.WriteLine($"Response body: {responseBody}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        var errorData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
+                        Console.WriteLine($"Error details: {JsonSerializer.Serialize(errorData)}");
+                        throw new InvalidOperationException($"HTTP error {response.StatusCode}: {responseBody}");
+                    }
+                    catch (JsonException jsonEx)
+                    {
+                        Console.WriteLine($"Failed to parse error JSON: {jsonEx.Message}");
+                        throw new InvalidOperationException(
+                            $"HTTP error {response.StatusCode}: Unable to parse error response.");
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(responseBody))
+                {
+                    throw new InvalidOperationException("Response body is empty.");
+                }
+
+                var data = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
+                if (data != null && data.TryGetValue("data", out var dataValue) && dataValue is JsonElement dataElement)
+                {
+                    var dataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(dataElement.GetRawText());
+                    if (dataDict != null)
+                    {
+                        return AddObjectId(dataDict, dataElement.GetRawText());
+                    }
+                }
+
+                throw new InvalidOperationException("Response data is invalid or missing.");
             }
-            catch (JsonException jsonEx)
+            catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Failed to parse error JSON: {jsonEx.Message}");
-                throw new InvalidOperationException($"HTTP error {response.StatusCode}: Unable to parse error response.");
+                Console.WriteLine($"HTTP error processing charge: {ex.Message}");
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"JSON error processing charge: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General error handling charge: {ex.Message}");
+                throw;
             }
         }
-        if (string.IsNullOrWhiteSpace(responseBody))
-        {
-            throw new InvalidOperationException("Response body is empty.");
-        }
-        var data = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
-        if (data != null && data.TryGetValue("data", out var dataValue) && dataValue is JsonElement dataElement)
-        {
-            var dataDict = JsonSerializer.Deserialize<Dictionary<string, object>>(dataElement.GetRawText());
-            if (dataDict != null)
-            {
-                return AddObjectId(dataDict, dataElement.GetRawText());
-            }
-        }
-        throw new InvalidOperationException("Response data is invalid or missing.");
-    }
-    catch (HttpRequestException ex)
-    {
-        Console.WriteLine($"HTTP error processing charge: {ex.Message}");
-        throw;
-    }
-    catch (JsonException ex)
-    {
-        Console.WriteLine($"JSON error processing charge: {ex.Message}");
-        throw new InvalidOperationException("Failed to process JSON response.", ex);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"General error handling charge: {ex.Message}");
-        throw;
-    }
-}
 
-
-        private object ManageError(object seed, Exception error)
-        {
-            // Handle and manage errors
-            var errorObj = new
-            {
-                objectType = "Error",
-                type = "Error Type",
-                errorMessage = error.Message,
-                errorCode = "Unknown",
-                errorList = new List<string>(),
-                errorException = error.ToString(),
-                errorDataMessage = "Unknown"
-            };
-
-            return errorObj;
-        }
-
-        private BaseResponse? AddObjectId(Dictionary<string, object> obj, string rawObj)
+        private BaseResponse? AddObjectId(Dictionary<string, object> obj, string? rawObj)
         {
             BaseResponse? response = null;
             if (obj["object"]?.ToString() == "Charge")
             {
-                var chargeResponse = JsonConvert.DeserializeObject<ChargeResponseData>(rawObj);
-                if (chargeResponse == null)
+                if (rawObj != null)
                 {
-                    chargeResponse = new ChargeResponseData();
+                    var chargeResponse = JsonConvert.DeserializeObject<ChargeResponseData>(rawObj);
+                    if (chargeResponse == null)
+                    {
+                        chargeResponse = new ChargeResponseData();
+                    }
+
+                    chargeResponse.RawData = rawObj;
+                    chargeResponse.ObjectId ??= $"ch_{obj["id"]}";
+                    response = chargeResponse;
                 }
-                chargeResponse.RawData = rawObj;
-                chargeResponse.ObjectId ??= $"ch_{obj["id"]}";
-                response = chargeResponse;
             }
-        
+
             return response;
         }
-
-
 
 
         public async Task<BaseResponse?> Retrieve(string chargeId)
@@ -260,12 +254,12 @@ public class Payarc
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine(ex);
                 throw;
             }
         }
 
-        public async Task<BaseResponse?> GetChargeDataAsync(HttpMethod method, string endpoint, string chargeId)
+        private async Task<BaseResponse?> GetChargeDataAsync(HttpMethod method, string endpoint, string chargeId)
         {
             try
             {
@@ -279,6 +273,7 @@ public class Payarc
                 {
                     request.Headers.Add(header.Key, header.Value);
                 }
+
                 var response = await _httpClient.SendAsync(request);
                 var responseBody = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Response status code: {response.StatusCode}");
@@ -289,10 +284,12 @@ public class Payarc
                     Console.WriteLine($"Error details: {JsonSerializer.Serialize(errorData)}");
                     throw new InvalidOperationException($"HTTP error {response.StatusCode}: {responseBody}");
                 }
+
                 if (string.IsNullOrWhiteSpace(responseBody))
                 {
                     throw new InvalidOperationException("Response body is empty.");
                 }
+
                 var data = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
                 if (data != null && data.TryGetValue("data", out var dataValue) && dataValue is JsonElement dataElement)
                 {
@@ -302,6 +299,7 @@ public class Payarc
                         return AddObjectId(dataDict, dataElement.GetRawText());
                     }
                 }
+
                 throw new InvalidOperationException("Response data is invalid or missing.");
             }
             catch (HttpRequestException ex)
@@ -338,25 +336,145 @@ public class Payarc
                     { "include", "review" }
                 };
             }
+
             return new Dictionary<string, string>();
         }
-        
+
         private (string endpoint, string id) DetermineEndpointAndId(string chargeId)
         {
             if (chargeId.StartsWith("ch_"))
             {
                 return ("charges", chargeId.Substring(3));
             }
+
             if (chargeId.StartsWith("ach_"))
             {
                 return ("achcharges", chargeId.Substring(4));
             }
+
             throw new Exception("Invalid charge ID format.");
         }
 
-        public void List()
+        public async Task<ListBaseResponse?> List(ChargeListOptions options)
         {
-            Console.WriteLine("Charges listed.");
+            try
+            {
+                var parameters = new Dictionary<string, object>
+                {
+                    { "limit", options.Limit ?? 25 },
+                    { "page", options.Page ?? 1 }
+                };
+                if (!string.IsNullOrEmpty(options.Search))
+                {
+                    var searchArray = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(options.Search);
+                    if (searchArray != null)
+                    {
+                        foreach (var searchItem in searchArray)
+                        {
+                            foreach (var kvp in searchItem)
+                            {
+                                parameters.Add(kvp.Key, kvp.Value);
+                            }
+                        }
+                    }
+                }
+
+                var query = BuildQueryString(parameters);
+                return await GetChargesAsync("charges", query);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            }
+        }
+
+        private async Task<ListBaseResponse?> GetChargesAsync(string endpoint, string? queryParams)
+        {
+            try
+            {
+                var url = $"{endpoint}?{queryParams}";
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                foreach (var header in _headers)
+                {
+                    request.Headers.Add(header.Key, header.Value);
+                }
+
+                var response = await _httpClient.SendAsync(request);
+                var responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response status code: {response.StatusCode}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
+                    Console.WriteLine($"Error details: {JsonSerializer.Serialize(errorData)}");
+                    throw new InvalidOperationException($"HTTP error {response.StatusCode}: {responseBody}");
+                }
+
+                if (string.IsNullOrWhiteSpace(responseBody))
+                {
+                    throw new InvalidOperationException("Response body is empty.");
+                }
+
+                var responseData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
+                if (responseData == null || !responseData.TryGetValue("data", out var dataValue) ||
+                    !(dataValue is JsonElement dataElement))
+                {
+                    throw new InvalidOperationException("Response data is invalid or missing.");
+                }
+                var rawData = dataElement.GetRawText();
+                var jsonCharges = dataElement.Deserialize<List<Dictionary<string, object>>>();
+                List<BaseResponse?>? charges = new List<BaseResponse?>();
+                if (jsonCharges != null)
+                {
+                    for (int i = 0; i < jsonCharges.Count; i++)
+                    {
+                        var ch = AddObjectId(jsonCharges[i], JsonSerializer.Serialize(jsonCharges[i]));
+                        charges?.Add(ch);
+                    }
+                }
+
+                var pagination = new Dictionary<string, object>();
+                if (responseData.TryGetValue("meta", out var metaValue) && metaValue is JsonElement metaElement)
+                {
+                    var paginationElement = metaElement.GetProperty("pagination");
+                    pagination["total"] = paginationElement.GetProperty("total").GetInt32();
+                    pagination["count"] = paginationElement.GetProperty("count").GetInt32();
+                    pagination["per_page"] = paginationElement.GetProperty("per_page").GetInt32();
+                    pagination["current_page"] = paginationElement.GetProperty("current_page").GetInt32();
+                    pagination["total_pages"] = paginationElement.GetProperty("total_pages").GetInt32();
+                }
+                pagination?.Remove("links");
+
+                return new ChargeListResponse
+                {
+                    Data = charges,
+                    Pagination = pagination,
+                    RawData = rawData
+                };
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HTTP error processing charge: {ex.Message}");
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"JSON error processing charge: {ex.Message}");
+                throw new InvalidOperationException("Failed to process JSON response.", ex);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General error handling charge: {ex.Message}");
+                throw;
+            }
+        }
+
+        private string BuildQueryString(Dictionary<string, object> parameters)
+        {
+            var queryString = string.Join("&",
+                parameters.Select(p =>
+                    $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value.ToString() ?? string.Empty)}"));
+            return queryString;
         }
 
         public void CreateRefund()

@@ -162,7 +162,7 @@ namespace Payarc.Entities.Charges
         public string? CreatedBy { get; set; }
 
         [JsonProperty("terminal_register")]
-        public string? TerminalRegister { get; set; }
+        public TerminalRegister? TerminalRegister { get; set; }
 
         [JsonProperty("amex_level3")]
         public List<string>? AmexLevel3 { get; set; }
@@ -288,10 +288,10 @@ public class CardWrapper
 public class RefundsWrapper
 {
     [JsonProperty("data")]
-    public List<RefundWrapper>? Refund { get; set; }
+    public List<Refund>? Refunds { get; set; }
 }
-public class RefundWrapper
-{
-    [JsonProperty("data")]
-    public Refund? Refund { get; set; }
-}
+// public class RefundWrapper
+// {
+//     // [JsonProperty("data")]
+//     public Refund? Refund { get; set; }
+// }

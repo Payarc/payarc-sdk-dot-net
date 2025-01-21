@@ -34,10 +34,10 @@ public class Refund
     public string? ChargeId { get; set; }
 
     [JsonProperty("created_at")]
-    public DateTime? CreatedAt { get; set; }
+    public string? CreatedAt { get; set; }
 
     [JsonProperty("updated_at")]
-    public DateTime? UpdatedAt { get; set; }
+    public string? UpdatedAt { get; set; }
 
     [JsonProperty("do_not_send_email_to_customer")]
     public bool? DoNotSendEmailToCustomer { get; set; }

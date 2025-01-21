@@ -12,6 +12,11 @@ public abstract class BaseResponse
         
     public override string ToString()
     {
-        return JsonConvert.SerializeObject(this);
+        var settings = new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented
+        };
+    
+        return JsonConvert.SerializeObject(this, settings);
     }
 }

@@ -64,90 +64,131 @@ public static class Program
 
     private static async Task CreateChargeByCardIdExample()
     {
-        var options = new ChargeCreateOptions
+        try
         {
-            Amount = 155,
-            Source = new CardCreateNestedOptions
+            var options = new ChargeCreateOptions
             {
-                CardId = "card_Ly9v09NN2P59M0m1",
-                CustomerId = "cus_jMNKVMPKnNxPVnDp"
-            },
-            Currency = "usd"
-        };
-        var charge = await _payarc.Charges.Create(options);
-        Console.WriteLine("Charge Data");
-        Console.WriteLine(charge);
-        Console.WriteLine("Raw Data");
-        Console.WriteLine(charge?.RawData);
+                Amount = 155,
+                Source = new CardCreateNestedOptions
+                {
+                    CardId = "card_Ly9v09NN2P59M0m1",
+                    CustomerId = "cus_jMNKVMPKnNxPVnDp"
+                },
+                Currency = "usd"
+            };
+            var charge = await _payarc.Charges.Create(options);
+            Console.WriteLine("Charge Data");
+            Console.WriteLine(charge);
+            Console.WriteLine("Raw Data");
+            Console.WriteLine(charge?.RawData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        
     }
     
     private static async Task CreateChargeByCustomerIdExample()
     {
-        var options = new ChargeCreateOptions
+        try
         {
-            Amount = 255,
-            Source = new CardCreateNestedOptions
+            var options = new ChargeCreateOptions
             {
-                CustomerId = "cus_jMNKVMPKnNxPVnDp"
-            },
-            Currency = "usd"
-        };
-        var charge = await _payarc.Charges.Create(options);
-        Console.WriteLine("Charge Data");
-        Console.WriteLine(charge);
-        Console.WriteLine("Raw Data");
-        Console.WriteLine(charge?.RawData);
+                Amount = 255,
+                Source = new CardCreateNestedOptions
+                {
+                    CustomerId = "cus_jMNKVMPKnNxPVnDp"
+                },
+                Currency = "usd"
+            };
+            var charge = await _payarc.Charges.Create(options);
+            Console.WriteLine("Charge Data");
+            Console.WriteLine(charge);
+            Console.WriteLine("Raw Data");
+            Console.WriteLine(charge?.RawData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+       
     }
 
     private static async Task CreateChargeByToken()
     {
-        var options = new ChargeCreateOptions
+        try
         {
-            Amount = 175,
-            Source = new CardCreateNestedOptions
+            var options = new ChargeCreateOptions
             {
-                TokenId = "tok_mLY0wmYlL0mNEw8q"
-            },
-            Currency = "usd"
-        };
-        var charge = await _payarc.Charges.Create(options);
-        Console.WriteLine("Charge Data");
-        Console.WriteLine(charge);
-        Console.WriteLine("Raw Data");
-        Console.WriteLine(charge?.RawData);
+                Amount = 175,
+                Source = new CardCreateNestedOptions
+                {
+                    TokenId = "tok_mLY0wmYlL0mNEw8q"
+                },
+                Currency = "usd"
+            };
+            var charge = await _payarc.Charges.Create(options);
+            Console.WriteLine("Charge Data");
+            Console.WriteLine(charge);
+            Console.WriteLine("Raw Data");
+            Console.WriteLine(charge?.RawData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+      
     }
 
     private static async Task GetChargeById()
     {
-        // var charge = await Payarc.Charges.Retrieve("ch_MnBROWLXBBXnoOWL");
-        var charge = await _payarc.Charges.Retrieve("ch_XMbnObBXDDbMXORo");
-        Console.WriteLine("Get charge By Id Data");
-        Console.WriteLine(charge);
-        Console.WriteLine("Raw Data");
-        Console.WriteLine(charge?.RawData);
+        try
+        {
+            // var charge = await Payarc.Charges.Retrieve("ch_MnBROWLXBBXnoOWL");
+            var charge = await _payarc.Charges.Retrieve("ch_XMbnObBXDDbMXORo");
+            Console.WriteLine("Get charge By Id Data");
+            Console.WriteLine(charge);
+            Console.WriteLine("Raw Data");
+            Console.WriteLine(charge?.RawData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+      
     }
 
     private static async Task ListCharges()
     {
-        var options = new ChargeListOptions()
+        try
         {
-            Limit = 25,
-            Page = 1,
-        };
-        var responseData = await _payarc.Charges.List(options);
-         Console.WriteLine("Charges Data");
-         for (int i = 0; i < responseData?.Data?.Count; i++)
-         {
-             var t = responseData.Data[i];
-             Console.WriteLine(responseData.Data[i]);
-         }
-         Console.WriteLine("Pagination Data");
-         Console.WriteLine(responseData?.Pagination["total"]);
-         Console.WriteLine(responseData?.Pagination["count"]);
-         Console.WriteLine(responseData?.Pagination["per_page"]);
-         Console.WriteLine(responseData?.Pagination["current_page"]);
-         Console.WriteLine(responseData?.Pagination["total_pages"]);
-         // Console.WriteLine("Raw Data");
-         // Console.WriteLine(responseData?.RawData);
+            var options = new ChargeListOptions()
+            {
+                Limit = 25,
+                Page = 1,
+            };
+            var responseData = await _payarc.Charges.List(options);
+            Console.WriteLine("Charges Data");
+            for (int i = 0; i < responseData?.Data?.Count; i++)
+            {
+                var t = responseData.Data[i];
+                Console.WriteLine(responseData.Data[i]);
+            }
+            Console.WriteLine("Pagination Data");
+            Console.WriteLine(responseData?.Pagination["total"]);
+            Console.WriteLine(responseData?.Pagination["count"]);
+            Console.WriteLine(responseData?.Pagination["per_page"]);
+            Console.WriteLine(responseData?.Pagination["current_page"]);
+            Console.WriteLine(responseData?.Pagination["total_pages"]);
+            // Console.WriteLine("Raw Data");
+            // Console.WriteLine(responseData?.RawData);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+       
     }
 }

@@ -22,10 +22,6 @@ public static class PayarcConfiguration
             if (string.IsNullOrEmpty(apiKey))
             {
                 apiKey = _configuration?["PayArcApiKey"];
-                if (string.IsNullOrEmpty(apiKey))
-                {
-                    throw new InvalidOperationException("API Key is required but not provided.");
-                }
             }
             return apiKey;
         }
@@ -39,10 +35,6 @@ public static class PayarcConfiguration
             if (string.IsNullOrEmpty(agentKey))
             {
                 agentKey = _configuration?["PayArcAgentKey"];
-                if (string.IsNullOrEmpty(agentKey))
-                {
-                    throw new InvalidOperationException("Agent Key is required but not provided.");
-                }
             }
             return agentKey;
         }
@@ -56,10 +48,6 @@ public static class PayarcConfiguration
             if (string.IsNullOrEmpty(baseUrl))
             {
                 baseUrl = _configuration?["PayArcBaseUrl"];
-                if (string.IsNullOrEmpty(baseUrl))
-                {
-                    throw new InvalidOperationException("Base URL is required but not provided.");
-                }
             }
             return baseUrl;
         }

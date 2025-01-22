@@ -1,20 +1,23 @@
 ﻿using System.Text.Json;
-
+using Microsoft.Extensions.Configuration;
 namespace TestPayarcSDK;
 
 using Payarc;
 
 public static class Program
 {
-    public static Payarc Payarc;
+    private static Payarc? _payarc;
 
     public static async Task Main(string[] args)
     {
-        PayarcConfiguration.ApiKey =
-            PayarcConfiguration.BaseUrl = "http://localapi6.payarc.net";
-        // PayarcConfiguration.BaseUrl = "sandbox";
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
+        PayarcConfiguration.Initialize(configuration);
+        PayarcConfiguration.BaseUrl = "http://localapi6.payarc.net";
 
-        Payarc = new Payarc();
+        _payarc = new Payarc();
 
         // await CreateChargeExample(); 
         // await CreateChargeByCardIdExample();
@@ -39,7 +42,7 @@ public static class Program
                 },
                 Currency = "usd"
             };
-            var charge = await Payarc.Charges.Create(options);
+            var charge = await _payarc.Charges.Create(options);
             Console.WriteLine("Charge Data");
             Console.WriteLine(charge);
             Console.WriteLine("Raw Data");
@@ -65,7 +68,7 @@ public static class Program
             },
             Currency = "usd"
         };
-        var charge = await Payarc.Charges.Create(options);
+        var charge = await _payarc.Charges.Create(options);
         Console.WriteLine("Charge Data");
         Console.WriteLine(charge);
         Console.WriteLine("Raw Data");
@@ -75,7 +78,7 @@ public static class Program
     private static async Task GetChargeById()
     {
         // var charge = await Payarc.Charges.Retrieve("ch_MnBROWLXBBXnoOWL");
-        var charge = await Payarc.Charges.Retrieve("ch_XMbnObBXDDbMXORo");
+        var charge = await _payarc.Charges.Retrieve("ch_XMbnObBXDDbMXORo");
         Console.WriteLine("Get charge By Id Data");
         Console.WriteLine(charge);
         Console.WriteLine("Raw Data");
@@ -89,7 +92,7 @@ public static class Program
             Limit = 25,
             Page = 1,
         };
-        var responseData = await Payarc.Charges.List(options);
+        var responseData = await _payarc.Charges.List(options);
          Console.WriteLine("Charges Data");
          for (int i = 0; i < responseData?.Data?.Count; i++)
          {

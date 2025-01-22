@@ -71,3 +71,7 @@ Thumbs.db
 *.swp
 *.bak
 *.tmp
+
+
+# Ignore appsettings.json
+**appsettings.*.json

@@ -14,6 +14,8 @@ namespace Payarc.Entities.Charges
         [JsonProperty("object_id")]
         public string? ObjectId { get; set; }
 
+        public Func<ChargeCreateOptions, ChargeCreateOptions?, Task<BaseResponse>> CreateRefund { get; set; }
+        
         [JsonProperty("id")]
         public new string? Id { get; set; }
 

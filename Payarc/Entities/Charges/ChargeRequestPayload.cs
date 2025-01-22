@@ -17,6 +17,19 @@ public class ChargeRequestPayload
     
     [JsonProperty("country")]
     public string? CountyCode { get; set; }
+    
+    [JsonProperty("state")]
+    public string? State { get; set; }
+    
+    [JsonProperty("city")]
+    public string? City { get; set; }
+    
+    [JsonProperty("address_line1")]
+    public string? AddressLine1 { get; set; }
+    
+    [JsonProperty("zip")]
+    public string? ZipCode { get; set; }
+    
     [JsonProperty("customer_id")]
     public string? CustomerId { get; set; }
     

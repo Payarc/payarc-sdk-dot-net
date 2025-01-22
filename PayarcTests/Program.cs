@@ -21,7 +21,9 @@ public static class Program
 
         // await CreateChargeExample(); 
         // await CreateChargeByCardIdExample();
+        // await CreateChargeByCustomerIdExample();
         // await GetChargeById();
+        // await CreateChargeByToken();
         await ListCharges();
     }
 
@@ -32,13 +34,17 @@ public static class Program
         {
             var options = new ChargeCreateOptions
             {
-                Amount = 185,
+                Amount = 635,
                 Source = new CardCreateNestedOptions
                 {
                     CardNumber = "4012000098765439",
                     ExpMonth = "03",
                     ExpYear = "2025",
-                    CountyCode = "USA"
+                    CountyCode = "USA",
+                    City = "GreenWitch",
+                    AddressLine1 = "123 Main Street",
+                    ZipCode = "12345",
+                    State = "CA"
                 },
                 Currency = "usd"
             };
@@ -65,6 +71,42 @@ public static class Program
             {
                 CardId = "card_Ly9v09NN2P59M0m1",
                 CustomerId = "cus_jMNKVMPKnNxPVnDp"
+            },
+            Currency = "usd"
+        };
+        var charge = await _payarc.Charges.Create(options);
+        Console.WriteLine("Charge Data");
+        Console.WriteLine(charge);
+        Console.WriteLine("Raw Data");
+        Console.WriteLine(charge?.RawData);
+    }
+    
+    private static async Task CreateChargeByCustomerIdExample()
+    {
+        var options = new ChargeCreateOptions
+        {
+            Amount = 255,
+            Source = new CardCreateNestedOptions
+            {
+                CustomerId = "cus_jMNKVMPKnNxPVnDp"
+            },
+            Currency = "usd"
+        };
+        var charge = await _payarc.Charges.Create(options);
+        Console.WriteLine("Charge Data");
+        Console.WriteLine(charge);
+        Console.WriteLine("Raw Data");
+        Console.WriteLine(charge?.RawData);
+    }
+
+    private static async Task CreateChargeByToken()
+    {
+        var options = new ChargeCreateOptions
+        {
+            Amount = 175,
+            Source = new CardCreateNestedOptions
+            {
+                TokenId = "tok_mLY0wmYlL0mNEw8q"
             },
             Currency = "usd"
         };

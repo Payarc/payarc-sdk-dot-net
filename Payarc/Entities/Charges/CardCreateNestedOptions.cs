@@ -12,6 +12,18 @@ public class CardCreateNestedOptions
     public string? ExpMonth { get; set; }
     [JsonProperty("country")]
     public string? CountyCode { get; set; }
+    
+    [JsonProperty("state")]
+    public string? State { get; set; }
+    
+    [JsonProperty("city")]
+    public string? City { get; set; }
+    
+    [JsonProperty("address_line1")]
+    public string? AddressLine1 { get; set; }
+    
+    [JsonProperty("zip")]
+    public string? ZipCode { get; set; }
     [JsonProperty("exp_year")]
     public string? ExpYear { get; set; }
     [JsonProperty("token_id")]

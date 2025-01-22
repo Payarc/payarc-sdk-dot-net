@@ -74,4 +74,5 @@ Thumbs.db
 
 
 # Ignore appsettings.json
-**appsettings.*.json
+**/appsettings*.json
+

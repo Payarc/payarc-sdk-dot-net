@@ -371,7 +371,7 @@ public class ChargeService
         {
             var path = $"{endpoint}/{chargeId}";
             var parameters = GetParams(endpoint);
-            var request = new HttpRequestMessage(HttpMethod.Get, path)
+            var request = new HttpRequestMessage(method, path)
             {
                 Content = new StringContent(JsonSerializer.Serialize(parameters), Encoding.UTF8, "application/json")
             };

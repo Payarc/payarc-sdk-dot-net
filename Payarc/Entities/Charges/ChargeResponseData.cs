@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using AnyOfTypes;
 using Payarc.Entities.Charges;
 
 namespace Payarc.Entities.Charges
@@ -14,7 +15,8 @@ namespace Payarc.Entities.Charges
         [JsonProperty("object_id")]
         public string? ObjectId { get; set; }
 
-        public Func<ChargeCreateOptions, ChargeCreateOptions?, Task<BaseResponse>> CreateRefund { get; set; }
+        [JsonIgnore]
+        public Func< Dictionary<string, object>?, Task<BaseResponse?>> CreateRefund { get; set; }
         
         [JsonProperty("id")]
         public new string? Id { get; set; }

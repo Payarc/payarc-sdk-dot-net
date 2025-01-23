@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using Payarc.Entities.Charges;
 
 namespace TestPayarcSDK;
 
@@ -21,7 +22,9 @@ public static class Program
 
         _payarc = new Payarc();
 
-        await CreateChargeExample(); 
+        // await CreateChargeExample(); 
+        // await RefundChargeById();
+        await RefundChargeByObject();
         // await CreateChargeByCardIdExample();
         // await CreateChargeByCustomerIdExample();
         // await GetChargeById();
@@ -61,8 +64,38 @@ public static class Program
         {
             Console.WriteLine(ex.Message);
         }
-       
         
+    }
+
+    private static async Task RefundChargeById()
+    {
+        try
+        {
+            string charge = "ch_BoLWODoBLLDyLOXy";
+            var refund = await _payarc.Charges.CreateRefund(charge, null);
+            Console.WriteLine("Refund Data");
+            Console.WriteLine(refund);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private static async Task RefundChargeByObject()
+    {
+        try
+        {
+            ChargeResponseData? charge =  (ChargeResponseData?) await _payarc.Charges.Retrieve("ch_DMWbOLWbyyoRLOBX");
+            var refund = await charge.CreateRefund(null);
+            Console.WriteLine("Refund Data");
+            Console.WriteLine(refund);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     private static async Task CreateChargeByCardIdExample()

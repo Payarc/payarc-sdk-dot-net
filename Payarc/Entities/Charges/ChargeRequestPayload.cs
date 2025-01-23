@@ -7,7 +7,7 @@ public class ChargeRequestPayload
     [JsonProperty("amount")]
     public long? Amount { get; set; }
     [JsonProperty("currency")]
-    public string Currency { get; set; }
+    public string? Currency { get; set; }
     [JsonProperty("card_id")]
     public string? CardId { get; set; }
     [JsonProperty("exp_month")]
@@ -45,6 +45,7 @@ public class ChargeRequestPayload
     [JsonProperty("card_number")]
     public string? CardNumber { get; set; }
 
+    public Dictionary<string, object>? Parameters { get; set; }
     public string ToJson()
     {
         var settings = new JsonSerializerSettings

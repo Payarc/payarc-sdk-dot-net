@@ -26,6 +26,7 @@ public class Payarc
     private static Dictionary<string, string> _headers;
 
     public ChargeService Charges { get; private set; }
+    public BillingService Billing { get; private set; }
 
     public Payarc(string apiVersion = "/v1/",
         string version = "1.0")
@@ -57,6 +58,7 @@ public class Payarc
 
         // Initialize Charges operations
         Charges = new ChargeService(_headers, _httpClient);
+        Billing = new BillingService(_headers, _httpClient);
     }
     
 }

@@ -21,10 +21,10 @@ public static class Program
         PayarcConfiguration.BaseUrl = "http://localapi6.payarc.net";
 
         _payarc = new Payarc();
-
+        _payarc.Billing.Plan.Create();
         // await CreateChargeExample(); 
         // await RefundChargeById();
-        await RefundChargeByObject();
+        // await RefundChargeByObject();
         // await CreateChargeByCardIdExample();
         // await CreateChargeByCustomerIdExample();
         // await GetChargeById();

@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
+
 namespace TestPayarcSDK;
 
 using Payarc;
@@ -19,12 +21,12 @@ public static class Program
 
         _payarc = new Payarc();
 
-        // await CreateChargeExample(); 
+        await CreateChargeExample(); 
         // await CreateChargeByCardIdExample();
         // await CreateChargeByCustomerIdExample();
         // await GetChargeById();
         // await CreateChargeByToken();
-        await ListCharges();
+        // await ListCharges();
     }
 
 
@@ -52,7 +54,8 @@ public static class Program
             Console.WriteLine("Charge Data");
             Console.WriteLine(charge);
             Console.WriteLine("Raw Data");
-            Console.WriteLine(charge?.RawData);
+            var json = JsonSerializer.Deserialize<JsonDocument>(charge?.RawData);
+            Console.WriteLine(json.RootElement.GetProperty("id"));
         }
         catch (Exception ex)
         {
